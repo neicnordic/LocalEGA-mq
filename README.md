@@ -8,6 +8,11 @@ The following environment variables can be used to configure the broker:
 
 | Variable | Description |
 |---------:|:------------|
+| `MQDATA` | Default data directory for RabbitMQ configuration |
+| `RABBITMQ_CONFIG_FILE` | Default rabbitmq.conf directory path |
+| `RABBITMQ_ADVANCED_CONFIG_FILE` | Default advanced.config directory path |
+| `RABBITMQ_LOG_BASE` | Default logs directory path |
+| `RABBITMQ_MNESIA_BASE` | Default data directory path for RabbitMQ |
 | `MQ_VHOST` | Default vhost other than `/` |
 | `MQ_VERIFY` | Set to `verify_none` to disable verification of client certificate |
 | `MQ_USER` | Default user (with admin rights) |

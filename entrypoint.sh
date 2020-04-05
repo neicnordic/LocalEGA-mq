@@ -5,7 +5,7 @@
 [[ -z "${CEGA_CONNECTION}" ]] && echo 'Environment variable CEGA_CONNECTION is empty' 1>&2 && exit 1
 
 
-cat >> /etc/rabbitmq/rabbitmq.conf <<EOF
+cat >> "${MQDATA}/rabbitmq.conf" <<EOF
 listeners.ssl.default = 5671
 ssl_options.cacertfile = ${MQ_CA:-/etc/rabbitmq/ssl/ca.pem}
 ssl_options.certfile = ${MQ_SERVER_CERT:-/etc/rabbitmq/ssl/mq-server.pem}
@@ -15,13 +15,13 @@ ssl_options.fail_if_no_peer_cert = true
 ssl_options.versions.1 = tlsv1.2
 disk_free_limit.absolute = 1GB
 management.listener.port = 15672
-management.load_definitions = /etc/rabbitmq/definitions.json
+management.load_definitions = ${MQDATA}/definitions.json
 default_vhost = ${MQ_VHOST:-/}
 EOF
 
-chmod 600 /etc/rabbitmq/rabbitmq.conf
+chmod 600 "${MQDATA}/rabbitmq.conf"
 
-cat > /etc/rabbitmq/definitions.json <<EOF
+cat > "${MQDATA}/definitions.json" <<EOF
 {
   "users": [
     {
@@ -69,9 +69,9 @@ cat > /etc/rabbitmq/definitions.json <<EOF
   ]
 }
 EOF
-chmod 600 /etc/rabbitmq/definitions.json
+chmod 600 "${MQDATA}/definitions.json"
 
-cat > /etc/rabbitmq/advanced.config <<EOF
+cat > "${MQDATA}/advanced.config" <<EOF
 [
   {rabbit,
     [{tcp_listeners, []}
@@ -131,7 +131,7 @@ cat > /etc/rabbitmq/advanced.config <<EOF
     ]}
 ].
 EOF
-chmod 600 /etc/rabbitmq/advanced.config
+chmod 600 "${MQDATA}/advanced.config"
 
 
 # Ownership by 'rabbitmq'

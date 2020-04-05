@@ -9,7 +9,10 @@ LABEL org.label-schema.build-date=$BUILD_DATE
 LABEL org.label-schema.vcs-url="https://github.com/EGA-archive/LocalEGA-mq"
 LABEL org.label-schema.vcs-ref=$SOURCE_COMMIT
 
-VOLUME /var/lib/rabbitmq
+RUN mkdir -p /ega && \
+    chown 100:101 /ega
+
+VOLUME /ega
 
 RUN apk add --no-cache ca-certificates
 
