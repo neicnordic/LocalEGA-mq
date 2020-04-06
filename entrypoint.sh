@@ -4,7 +4,7 @@
 [ -z "${MQ_PASSWORD_HASH}" ] && echo 'Environment variable MQ_PASSWORD_HASH is empty' 1>&2 && exit 1
 [ -z "${CEGA_CONNECTION}" ] && echo 'Environment variable CEGA_CONNECTION is empty' 1>&2 && exit 1
 
-if [ ! -e "${MQ_SERVER_CERT}" ] || [ ! -e "${MQ_SERVER_KEY}" ]; then
+if [ -z "${MQ_SERVER_CERT}" ] || [ -z "${MQ_SERVER_KEY}" ]; then
 SSL_SUBJ="/C=SE/ST=Sweden/L=Uppsala/O=NBIS/OU=SysDevs/CN=LocalEGA"
 mkdir -p "${HOME}/ssl"
 # Generating the SSL certificate + key
