@@ -1,27 +1,36 @@
-#!/bin/bash
+#!/bin/sh
 
-[[ -z "${MQ_USER}" ]] && echo 'Environment variable MQ_USER is empty' 1>&2 && exit 1
-[[ -z "${MQ_PASSWORD_HASH}" ]] && echo 'Environment variable MQ_PASSWORD_HASH is empty' 1>&2 && exit 1
-[[ -z "${CEGA_CONNECTION}" ]] && echo 'Environment variable CEGA_CONNECTION is empty' 1>&2 && exit 1
+[ -z "${MQ_USER}" ] && echo 'Environment variable MQ_USER is empty' 1>&2 && exit 1
+[ -z "${MQ_PASSWORD_HASH}" ] && echo 'Environment variable MQ_PASSWORD_HASH is empty' 1>&2 && exit 1
+[ -z "${CEGA_CONNECTION}" ] && echo 'Environment variable CEGA_CONNECTION is empty' 1>&2 && exit 1
 
+if [ ! -e "${PG_SERVER_CERT}" ] || [ ! -e "${PG_SERVER_KEY}" ]; then
+SSL_SUBJ="/C=SE/ST=Sweden/L=Uppsala/O=NBIS/OU=SysDevs/CN=LocalEGA"
+mkdir -p "${HOME}/ssl"
+# Generating the SSL certificate + key
+openssl req -x509 -newkey rsa:2048 \
+    -keyout "${HOME}/ssl/mq-server.key" -nodes \
+    -out "${HOME}/ssl/mq-server.pem" -sha256 \
+    -days 1000 -subj "${SSL_SUBJ}"
+fi
 
-cat >> "${MQDATA}/rabbitmq.conf" <<EOF
+cat >> "/var/lib/rabbitmq/rabbitmq.conf" <<EOF
 listeners.ssl.default = 5671
-ssl_options.cacertfile = ${MQ_CA:-/etc/rabbitmq/ssl/ca.pem}
-ssl_options.certfile = ${MQ_SERVER_CERT:-/etc/rabbitmq/ssl/mq-server.pem}
-ssl_options.keyfile = ${MQ_SERVER_KEY:-/etc/rabbitmq/ssl/mq-server-key.pem}
+ssl_options.cacertfile = ${MQ_CA:-/etc/ssl/certs/ca-certificates.crt}
+ssl_options.certfile = ${MQ_SERVER_CERT:-/var/lib/rabbitmq/ssl/mq-server.pem}
+ssl_options.keyfile = ${MQ_SERVER_KEY:-/var/lib/rabbitmq/ssl/mq-server.key}
 ssl_options.verify = ${MQ_VERIFY:-verify_peer}
 ssl_options.fail_if_no_peer_cert = true
 ssl_options.versions.1 = tlsv1.2
 disk_free_limit.absolute = 1GB
 management.listener.port = 15672
-management.load_definitions = ${MQDATA}/definitions.json
+management.load_definitions = /var/lib/rabbitmq/definitions.json
 default_vhost = ${MQ_VHOST:-/}
 EOF
 
-chmod 600 "${MQDATA}/rabbitmq.conf"
+chmod 600 "/var/lib/rabbitmq/rabbitmq.conf"
 
-cat > "${MQDATA}/definitions.json" <<EOF
+cat > "/var/lib/rabbitmq/definitions.json" <<EOF
 {
   "users": [
     {
@@ -69,9 +78,9 @@ cat > "${MQDATA}/definitions.json" <<EOF
   ]
 }
 EOF
-chmod 600 "${MQDATA}/definitions.json"
+chmod 600 "/var/lib/rabbitmq/definitions.json"
 
-cat > "${MQDATA}/advanced.config" <<EOF
+cat > "/var/lib/rabbitmq/advanced.config" <<EOF
 [
   {rabbit,
     [{tcp_listeners, []}
@@ -131,14 +140,6 @@ cat > "${MQDATA}/advanced.config" <<EOF
     ]}
 ].
 EOF
-chmod 600 "${MQDATA}/advanced.config"
+chmod 600 "/var/lib/rabbitmq/advanced.config"
 
-
-# Ownership by 'rabbitmq'
-#[[ -e "${MQ_CA}" ]] && chown rabbitmq:rabbitmq "${MQ_CA}"
-#[[ -e "${MQ_SERVER_CERT}" ]] && chown rabbitmq:rabbitmq "${MQ_SERVER_CERT}"
-#[[ -e "${MQ_SERVER_KEY}" ]] && chown rabbitmq:rabbitmq "${MQ_SERVER_KEY}"
-#find /var/lib/rabbitmq \! -user rabbitmq -exec chown rabbitmq '{}' +
-
-# Run as 'rabbitmq'
 exec "$@"
